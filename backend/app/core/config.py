@@ -1,10 +1,11 @@
-from pydantic import computed_field
+from typing import Any, Optional
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=("../.env", ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -17,17 +18,11 @@ class Settings(BaseSettings):
     # Database (PostgreSQL)
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432
-    POSTGRES_USER: str = "postgres"
+    POSTGRES_USER: str = "quizai"
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = "quizai"
-
-    @computed_field
-    @property
-    def database_url(self) -> str:
-        return (
-            f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        )
+    DATABASE_URL: Optional[str] = None
+    database_url: str = ""
 
     # Keycloak (OIDC)
     KEYCLOAK_URL: str = "http://localhost:8080"
@@ -38,6 +33,24 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "llama3"
 
+    def model_post_init(self, __context: Any) -> None:
+        if not self.database_url:
+            if self.DATABASE_URL:
+                self.database_url = self.DATABASE_URL
+            else:
+                self.database_url = (
+                    f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+                    f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+                )
+        # Docker (127.0.0.1:5432) кезінде localhost IPv6-ға тірелмеуі үшін
+        if "@localhost:" in self.database_url:
+            self.database_url = self.database_url.replace(
+                "@localhost:", "@127.0.0.1:", 1
+            )
+
+    @property
+    def environment(self) -> str:
+        return self.ENVIRONMENT
+
 
 settings = Settings()
-
