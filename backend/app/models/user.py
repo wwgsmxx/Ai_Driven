@@ -28,6 +28,7 @@ class User(Base):
         nullable=False,
     )
     full_name: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     role: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
