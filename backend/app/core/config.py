@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "QuizAI"
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
+    demo_user_email: str = "teacher@demo.kz"
 
     # Database (PostgreSQL)
     POSTGRES_SERVER: str = "localhost"
@@ -23,11 +24,6 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "quizai"
     DATABASE_URL: Optional[str] = None
     database_url: str = ""
-
-    # Keycloak (OIDC)
-    KEYCLOAK_URL: str = "http://localhost:8080"
-    KEYCLOAK_REALM: str = "quizai"
-    KEYCLOAK_CLIENT_ID: str = "quizai-backend"
 
     # LLM (Ollama)
     OLLAMA_BASE_URL: str = "http://localhost:11434"
