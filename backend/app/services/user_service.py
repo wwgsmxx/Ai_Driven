@@ -1,12 +1,35 @@
+from app.core.passwords import hash_password, verify_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserRead, UserUpdate
-from app.services.errors import BadRequestError, NotFoundError
+from app.schemas.user import UserLogin, UserRead, UserRegister, UserUpdate
+from app.services.errors import (
+    AuthError,
+    BadRequestError,
+    ConflictError,
+    NotFoundError,
+)
 
 
 class UserService:
     def __init__(self, repo: UserRepository) -> None:
         self.repo = repo
+
+    def register(self, data: UserRegister) -> UserRead:
+        if self.repo.get_by_email(str(data.email)):
+            raise ConflictError("Бұл email бұрын тіркелген")
+        user = User(
+            email=str(data.email),
+            full_name=data.full_name,
+            role=data.role,
+            password_hash=hash_password(data.password),
+        )
+        return UserRead.model_validate(self.repo.create(user))
+
+    def check_login(self, data: UserLogin) -> UserRead:
+        user = self.repo.get_by_email(str(data.email))
+        if user is None or not verify_password(data.password, user.password_hash):
+            raise AuthError("Email немесе құпиясөз қате")
+        return UserRead.model_validate(user)
 
     def _get(self, user_id: int) -> User:
         user = self.repo.get(user_id)
