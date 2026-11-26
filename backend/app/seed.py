@@ -34,6 +34,7 @@ def seed() -> None:
             user = db.scalar(select(User).where(User.email == item["email"]))
             if user is None:
                 user = User(
+                    keycloak_id=f"legacy-{item['role']}",
                     email=item["email"],
                     full_name=item["full_name"],
                     role=item["role"],

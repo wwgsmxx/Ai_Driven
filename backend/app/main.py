@@ -14,6 +14,11 @@ app = FastAPI(
     title=getattr(settings, "app_name", settings.PROJECT_NAME),
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
+    swagger_ui_init_oauth={
+        "clientId": settings.keycloak_client_id,
+        "usePkceWithAuthorizationCodeGrant": True,
+        "scopes": "openid",
+    },
 )
 
 _ERROR_CODES: dict[type[Exception], int] = {

@@ -20,6 +20,10 @@
 | 11 | 2026-11-23 | П1–П3: Негізгі объект (`quiz`) үшін Schema, Repository, Service, Router және Seed (9-сабақ) | Antigravity · Gemini | «Негізгі объектім quiz үшін schema, repository, service, errors.py, deps.py, seed.py және 5 CRUD endpoint жаса» | `QuizCreate`, `QuizUpdate`, `QuizRead`, `QuizRepository`, `QuizService`, `errors.py`, `deps.py`, `seed.py` және `routers/quizzes.py` құрылды | ✅ қабылданды | Router-де SQL жоқ, Service-те `HTTPException` жоқ, `update`-те `exclude_unset=True, exclude_none=True` қолданылды |
 | 12 | 2026-11-26 | П4–П5: Тіркелу (`argon2`), 0002 миграция және пайдаланушыларды басқару (`admin`) (9-сабақ) | Antigravity · Gemini | «Тіркелу мен кіруді тексеруді жаса (pwdlib[argon2], UserRegister, UserLogin) және admin үшін /api/users CRUD қос» | `core/passwords.py` (`$argon2id$`), `0002` миграциясы (`password_hash`), `routers/auth.py` және `routers/users.py` жасалды | ✅ қабылданды | Дерекқорда тек `$argon2id$` хэш сақталады, `UserRead`-та пароль жоқ, өз рөлін өзгерту/өзін өшіру 400 қайтарады |
 | 13 | 2026-11-26 | П6: Бағынышты объект (`question`) және негізгі әрекет (`publish`, `attempt`) + автотесттер (9-сабақ) | Antigravity · Gemini | «Бағынышты объект question және негізгі әрекет attempt үшін қабаттар мен автотесттерді жаса» | `questions.py`, `attempts.py` роутерлері/сервистері/репозиторийлері және `test_users.py`, `test_auth.py`, `test_quizzes.py`, `test_questions.py`, `test_attempts.py` жасалды | ✅ қабылданды | Жарияланған тестті өзгерту → 400, сұрақсыз жариялау → 400, бөтен тест → 403, студентке `correct_index` берілмейді |
+| 14 | 2026-11-26 | П1: Keycloak realm (`realm-quizai.json`) генерациялау (10-сабақ) | Antigravity · Gemini | «Keycloak 26 үшін keycloak/realm-quizai.json жаса: realm quizai, 3 рөл, quizai-web PKCE S256, audience quizai-api, 3 демо-пайдаланушы» | `keycloak/realm-quizai.json` құрылды, бірақ демо-пайдаланушыларда `account` клиент рөлдері болмай `/account` 401 қайтарды | ✏️ өзгертілді | Демо-пайдаланушыларға `clientRoles: {"account": ["manage-account", "view-profile"]}` қосылып, Docker-ге импортталды |
+| 15 | 2026-11-26 | П2: `core/security.py` — JWKS арқылы RS256 JWT тексеру (10-сабақ) | Antigravity · Gemini | «@AGENTS.md бойынша core/security.py жаса: PyJWKClient(cache_keys=True), тек RS256, require exp/iat/iss/sub/aud, realm_access.roles» | `KeycloakVerifier`, `AuthUnavailableError`, `Identity` және `identity_from_claims` жасалды; токен еш жерде логқа жазылмайды | ✅ қабылданды | Алгоритм қатаң `["RS256"]`, рөл тек `realm_access.roles`-тан алынады (`APP_ROLES` иерархиясымен) |
+| 16 | 2026-11-26 | П3: `0003` миграциясы, `UserRepository.sync()`, `deps.py`, `auth/me` және пароль кодын өшіру (10-сабақ) | Antigravity · Gemini | «User моделіне keycloak_id қос, password_hash пен пароль эндпоинттерін өшір, 3 қадамды 0003 миграция және sync() жаса» | `0003_keycloak_users.py` (`legacy-\|\|id` толтырумен), `UserRepository.sync()`, `OAuth2AuthorizationCodeBearer`, `GET /api/auth/me` жасалды; `passwords.py`, `register`, `login`, `PATCH /api/users/{id}` өшірілді | ✅ қабылданды | Бос емес `users` кестесінде `NOT NULL` қатесі шықпас үшін 3 қадамды миграция және `legacy-*` байланыстыру қолданылды |
+| 17 | 2026-11-26 | П4: Keycloak-сыз RSA автотесттер (`test_auth.py`) және рөл матрицасы (10-сабақ) | Antigravity · Gemini | «tests/conftest.py ішінде RSA кілт жұбын генерациялап, 401/403/503 және алғашқы кіру sync() автотесттерін жаз» | `make_token`, `_TestVerifier` арқылы 401 (бос, қоқыс, мерзімі өткен, бөтен `iss`/`aud`/кілт), 403 (рөлсіз, бөтен рөл, бөтен объект), 503 және `sync()` тесттері жазылды | ✅ қабылданды | Тесттер сыртқы Keycloak контейнеріне тәуелді емес, барлық тексеруден өтті |
 
 ### 8-сабақ · Тексеру нәтижелері (psql шектеулері және миграция)
 - **Миграция тексеруінің 6 жауабы:** 1) 4 кесте (`users`, `quizzes`, `attempts`, `questions`); 2) `password` жоқ; 3) 4 FK (`ON DELETE CASCADE`); 4) UNIQUE (`ix_users_email`) және CHECK (`ck_users_role`, `ck_questions_source`, `ck_questions_correct_index`, `ck_attempts_score`, `ck_attempts_total`); 5) `downgrade()` кері ретпен жояды; 6) `alembic upgrade head --sql` валидацияланды.
@@ -63,5 +67,21 @@
 | 8 | `GET /api/users` | `DEMO_USER_EMAIL=admin@demo.kz` | `200` | **200** |
 | 9 | `PATCH /api/users/{id}` | `{"role": "student"}` (тіркелген пайдаланушы) | `200` | **200** |
 | 10 | `DELETE /api/users/{id}` | `admin` өзін | `400` | **400** |
+
+---
+
+### 10-сабақ · Swagger + Keycloak тексеру парағы: 10 сұраныс
+| № | Кім болып кірдіңіз | Сұраныс | Күтеміз | Алынған код |
+|---|---|---|---|---|
+| 1 | Кірмей (Logout) | `GET /api/auth/me` | `401` | **401** |
+| 2 | Кірмей (Logout) | `GET /api/quizzes` | `401` | **401** |
+| 3 | `student@demo.kz` | `GET /api/auth/me` | `200`, `"role": "student"` | **200** |
+| 4 | `student@demo.kz` | `POST /api/quizzes` | `403` | **403** |
+| 5 | `student@demo.kz` | `GET /api/users` | `403` | **403** |
+| 6 | `teacher@demo.kz` | `POST /api/quizzes` | `201`, `owner_id` = сіздің `id` | **201** |
+| 7 | `teacher@demo.kz` | `GET /api/users` | `403` | **403** |
+| 8 | `admin@demo.kz` | `GET /api/users` | `200`, кемінде 3 пайдаланушы | **200** |
+| 9 | `admin@demo.kz` | `DELETE /api/users/{өз_id}` | `400` — өзін өшіре алмайды | **400** |
+| 10 | Жаңа тіркелген (`Register`) | `GET /api/auth/me` | `200`, `"role": "student"` (әдепкі рөл) | **200** |
 
 <!-- Шешім белгілері: ✅ қабылданды · ✏️ өзгертілді · ❌ қабылданбады -->
