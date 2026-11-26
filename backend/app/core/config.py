@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "QuizAI"
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
-    demo_user_email: str = "teacher@demo.kz"
 
     # Database (PostgreSQL)
     POSTGRES_SERVER: str = "localhost"
@@ -24,6 +23,12 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "quizai"
     DATABASE_URL: Optional[str] = None
     database_url: str = ""
+
+    # Keycloak
+    KEYCLOAK_ISSUER: str = "http://localhost:8080/realms/quizai"
+    KEYCLOAK_JWKS_URL: Optional[str] = None
+    KEYCLOAK_AUDIENCE: str = "quizai-api"
+    KEYCLOAK_CLIENT_ID: str = "quizai-web"
 
     # LLM (Ollama)
     OLLAMA_BASE_URL: str = "http://localhost:11434"
@@ -47,6 +52,25 @@ class Settings(BaseSettings):
     @property
     def environment(self) -> str:
         return self.ENVIRONMENT
+
+    @property
+    def keycloak_issuer(self) -> str:
+        return self.KEYCLOAK_ISSUER
+
+    @property
+    def keycloak_audience(self) -> str:
+        return self.KEYCLOAK_AUDIENCE
+
+    @property
+    def keycloak_client_id(self) -> str:
+        return self.KEYCLOAK_CLIENT_ID
+
+    @property
+    def jwks_url(self) -> str:
+        return (
+            self.KEYCLOAK_JWKS_URL
+            or f"{self.KEYCLOAK_ISSUER}/protocol/openid-connect/certs"
+        )
 
 
 settings = Settings()

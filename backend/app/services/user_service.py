@@ -1,35 +1,12 @@
-from app.core.passwords import hash_password, verify_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserLogin, UserRead, UserRegister, UserUpdate
-from app.services.errors import (
-    AuthError,
-    BadRequestError,
-    ConflictError,
-    NotFoundError,
-)
+from app.schemas.user import UserRead
+from app.services.errors import BadRequestError, NotFoundError
 
 
 class UserService:
     def __init__(self, repo: UserRepository) -> None:
         self.repo = repo
-
-    def register(self, data: UserRegister) -> UserRead:
-        if self.repo.get_by_email(str(data.email)):
-            raise ConflictError("Бұл email бұрын тіркелген")
-        user = User(
-            email=str(data.email),
-            full_name=data.full_name,
-            role=data.role,
-            password_hash=hash_password(data.password),
-        )
-        return UserRead.model_validate(self.repo.create(user))
-
-    def check_login(self, data: UserLogin) -> UserRead:
-        user = self.repo.get_by_email(str(data.email))
-        if user is None or not verify_password(data.password, user.password_hash):
-            raise AuthError("Email немесе құпиясөз қате")
-        return UserRead.model_validate(user)
 
     def _get(self, user_id: int) -> User:
         user = self.repo.get(user_id)
@@ -43,25 +20,6 @@ class UserService:
 
     def get_user(self, user_id: int) -> UserRead:
         return UserRead.model_validate(self._get(user_id))
-
-    def update_user(
-        self,
-        user_id: int,
-        data: UserUpdate,
-        current_user: User,
-    ) -> UserRead:
-        target = self._get(user_id)
-        changes = data.model_dump(exclude_unset=True, exclude_none=True)
-        if (
-            "role" in changes
-            and target.id == current_user.id
-            and changes["role"] != current_user.role
-        ):
-            raise BadRequestError("Өз рөліңізді өзгерте алмайсыз")
-
-        for field, value in changes.items():
-            setattr(target, field, value)
-        return UserRead.model_validate(self.repo.save(target))
 
     def delete_user(self, user_id: int, current_user: User) -> None:
         target = self._get(user_id)

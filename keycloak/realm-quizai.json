@@ -1,0 +1,154 @@
+{
+  "realm": "quizai",
+  "enabled": true,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "name": "student",
+        "description": "Студент — тест тапсырушы"
+      },
+      {
+        "name": "teacher",
+        "description": "Мұғалім — тест және сұрақтар құрастырушы"
+      },
+      {
+        "name": "admin",
+        "description": "Әкімші — жүйені және пайдаланушыларды басқарушы"
+      }
+    ]
+  },
+  "defaultRole": {
+    "name": "default-roles-quizai",
+    "description": "${role_default-roles}",
+    "composite": true,
+    "composites": {
+      "realm": [
+        "student",
+        "offline_access",
+        "uma_authorization"
+      ],
+      "client": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ]
+      }
+    }
+  },
+  "clients": [
+    {
+      "clientId": "quizai-web",
+      "name": "QuizAI Web Client",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "http://localhost:8000/*",
+        "http://127.0.0.1:8000/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:3000"
+      ],
+      "protocolMappers": [
+        {
+          "name": "quizai-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "quizai-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "student@demo.kz",
+      "email": "student@demo.kz",
+      "firstName": "Demo",
+      "lastName": "Student",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "student",
+        "default-roles-quizai"
+      ],
+      "clientRoles": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-pass-123",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "teacher@demo.kz",
+      "email": "teacher@demo.kz",
+      "firstName": "Demo",
+      "lastName": "Teacher",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "teacher"
+      ],
+      "clientRoles": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-pass-123",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "admin@demo.kz",
+      "email": "admin@demo.kz",
+      "firstName": "Demo",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "admin"
+      ],
+      "clientRoles": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-pass-123",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

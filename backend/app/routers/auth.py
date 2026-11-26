@@ -1,33 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 
-from app.core.deps import get_user_service
-from app.schemas.user import UserLogin, UserRead, UserRegister
-from app.services.user_service import UserService
+from app.core.deps import get_current_user
+from app.models.user import User
+from app.schemas.user import UserRead
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post(
-    "/register",
-    response_model=UserRead,
-    status_code=status.HTTP_201_CREATED,
-)
-def register(
-    data: UserRegister,
-    service: Annotated[UserService, Depends(get_user_service)],
-) -> UserRead:
-    return service.register(data)
-
-
-@router.post(
-    "/login",
-    response_model=UserRead,
-    status_code=status.HTTP_200_OK,
-)
-def login(
-    data: UserLogin,
-    service: Annotated[UserService, Depends(get_user_service)],
-) -> UserRead:
-    return service.check_login(data)
+@router.get("/me", response_model=UserRead)
+def me(current_user: Annotated[User, Depends(get_current_user)]) -> User:
+    return current_user
